@@ -1,6 +1,7 @@
 import AppLayout from "@/layouts/AppLayout.vue";
 import AuthLayout from "@/layouts/AuthLayout.vue";
 import TokenService from "@/services/service-token";
+import { watch } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { loadLayoutMiddleware } from "./layoutMiddleware";
 const Artist = () => import("@/pages/Artists/Artist.vue");
@@ -8,6 +9,16 @@ const Home = () => import("@/pages/Dashboard/Home.vue");
 const Music = () => import("@/pages/Music/Music.vue");
 const User = () => import("@/pages/User/User.vue");
 
+watch(
+  () => TokenService.getToken(),
+  (token) => {
+    if (token) {
+      console.log("Token is set");
+    } else {
+      console.log("Token is not set");
+    }
+  }
+);
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [

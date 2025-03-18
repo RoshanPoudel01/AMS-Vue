@@ -24,7 +24,10 @@
             <FormMessage />
           </FormItem>
         </FormField>
-        <Button type="submit">Submit</Button>
+        <Button type="submit">
+          <Loader2 v-if="isPending" class="w-4 h-4 mr-2 animate-spin" />
+          Submit
+        </Button>
       </form>
     </Card>
   </div>
@@ -47,7 +50,7 @@ import { useLogin } from "@/services/service-auth";
 import { ref } from "vue";
 
 import { toTypedSchema } from "@vee-validate/zod";
-import { LucideEyeClosed } from "lucide-vue-next";
+import { Loader2, LucideEyeClosed } from "lucide-vue-next";
 import { useForm } from "vee-validate";
 import * as z from "zod";
 
@@ -75,7 +78,7 @@ const { handleSubmit, handleReset } = useForm({
   validationSchema: formSchema,
 });
 
-const { mutateAsync: login } = useLogin();
+const { mutateAsync: login, isPending } = useLogin();
 
 const onSubmit = handleSubmit(async (values) => {
   try {

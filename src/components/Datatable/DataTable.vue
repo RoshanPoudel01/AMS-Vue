@@ -10,10 +10,12 @@ import {
 import {
   FlexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useVueTable,
   type ColumnDef,
 } from "@tanstack/vue-table";
-import { ref, watchEffect } from "vue";
+import { computed, defineEmits, defineProps } from "vue";
+
 const props = defineProps({
   data: {
     type: Array,
@@ -23,29 +25,41 @@ const props = defineProps({
     type: Array as () => ColumnDef<unknown, any>[],
     required: true,
   },
+  page: {
+    type: Number,
+    default: 1,
+  },
+  pageSize: {
+    type: Number,
+    default: 10,
+  },
+  totalItems: {
+    type: Number,
+    default: 0,
+  },
 });
 
-// Create a reactive reference for the table data
-const tableData = ref(props.data);
+// Emit events when page or pageSize changes
+const emit = defineEmits(["update:page", "update:pageSize"]);
 
-// Watch for changes in the data prop
-watchEffect(() => {
-  tableData.value = props.data;
-});
-
-// Initialize the table
 const table = useVueTable({
   get data() {
-    return tableData.value;
+    return props.data;
   },
-  columns: props?.columns,
+  columns: props.columns,
   getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  pageCount: computed(() => Math.ceil(props.totalItems / props.pageSize)).value,
 });
+// Pagination handlers
+function goToPage(page: number) {
+  emit("update:page", Math.max(1, Math.min(page, table.getPageCount())));
+}
 
-// Expose the table to the parent component
-defineExpose({
-  table,
-});
+function handlePageSizeChange(event: Event) {
+  const newSize = Number((event.target as HTMLSelectElement).value);
+  emit("update:pageSize", newSize);
+}
 </script>
 
 <template>
@@ -83,35 +97,56 @@ defineExpose({
       </TableRow>
     </TableBody>
   </Table>
+
+  <!-- Pagination Controls -->
+  <div class="flex justify-center mt-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <button
+          class="border rounded p-1"
+          @click="goToPage(1)"
+          :disabled="page === 1"
+        >
+          «
+        </button>
+        <button
+          class="border rounded p-1"
+          @click="goToPage(page - 1)"
+          :disabled="page === 1"
+        >
+          ‹
+        </button>
+        <button
+          class="border rounded p-1"
+          @click="goToPage(page + 1)"
+          :disabled="page >= table.getPageCount()"
+        >
+          ›
+        </button>
+        <button
+          class="border rounded p-1"
+          @click="goToPage(table.getPageCount())"
+          :disabled="page >= table.getPageCount()"
+        >
+          »
+        </button>
+
+        <span class="flex items-center gap-1">
+          <div>Page</div>
+          <strong>{{ page }} of {{ table.getPageCount() }}</strong>
+        </span>
+
+        <select :value="pageSize" @change="handlePageSizeChange">
+          <option
+            v-for="size in [10, 20, 30, 40, 50]"
+            :key="size"
+            :value="size"
+          >
+            Show {{ size }}
+          </option>
+        </select>
+      </div>
+      <div>{{ data.length }} Rows</div>
+    </div>
+  </div>
 </template>
-
-<style scoped>
-.custom-datatable table {
-  border: 1px solid lightgray;
-  width: 100%;
-}
-
-.custom-datatable tbody {
-  border-bottom: 1px solid lightgray;
-}
-
-.custom-datatable th {
-  border-bottom: 1px solid lightgray;
-  border-right: 1px solid lightgray;
-  padding: 2px 4px;
-  background-color: #f1f1f1;
-}
-
-.custom-datatable td {
-  padding: 6px 8px;
-  border-right: 1px solid lightgray;
-}
-
-.custom-datatable tfoot {
-  color: gray;
-}
-
-.custom-datatable tfoot th {
-  font-weight: normal;
-}
-</style>

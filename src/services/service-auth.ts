@@ -20,7 +20,7 @@ const initLogin = (data: ILogin) => {
 
 const useLogin = () => {
   const params = new URLSearchParams(window.location.search);
-  const redirectUrl = params.get("redirect") || "/";
+  const redirectUrl = params.get("redirect") ?? "/";
   return useMutation({
     mutationKey: [api.auth.login],
     mutationFn: initLogin,

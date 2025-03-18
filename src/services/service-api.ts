@@ -12,7 +12,7 @@ const users = {
 };
 
 const artists = {
-  index: "/artist",
+  index: "/artists",
   byId: "/artist/:id",
   create: "/artist/create-artist",
   delete: "/artist/delete/:id",
