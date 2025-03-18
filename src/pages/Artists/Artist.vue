@@ -15,8 +15,8 @@
         :data="artistsData"
         :columns="columns"
         :totalItems="16"
-        :page="pageParams.page"
-        :pageSize="pageParams.pageSize"
+        :page="page"
+        :pageSize="pageSize"
         @update:page="handlePageChange"
         @update:pageSize="handlePageSizeChange"
       />
@@ -33,22 +33,29 @@ import DialogHeader from "@/components/ui/dialog/DialogHeader.vue";
 import DialogTrigger from "@/components/ui/dialog/DialogTrigger.vue";
 import AppLayout from "@/layouts/AppLayout.vue";
 import { GetAllArtists } from "@/services/service-artist";
-import { reactive, ref, toRefs, watch } from "vue";
+import { reactive, ref, watch } from "vue";
 
 // Pagination parameters
-let pageParams = reactive({
-  page: 1,
-  pageSize: 10,
-});
+const page = ref(1);
+const pageSize = ref(10);
 
 // Initialize refs for derived data
 const artistsData = ref([]);
 const totalItems = ref(0);
-const { page, pageSize } = toRefs(pageParams);
 
-const { data, refetch } = GetAllArtists({
+// Create reactive params object for the query
+const queryParams = reactive({
   page: page.value,
   size: pageSize.value,
+});
+
+// Get data using the reactive params
+const { data } = GetAllArtists(queryParams);
+
+// Watch for page/pageSize changes and update query params
+watch([page, pageSize], ([newPage, newSize]) => {
+  queryParams.page = newPage;
+  queryParams.size = newSize;
 });
 
 // Update local refs whenever data changes
@@ -79,12 +86,12 @@ const columns = [
 
 // Handle page change
 function handlePageChange(newPage) {
-  pageParams.page = newPage;
+  page.value = newPage;
 }
 
 // Handle page size change
 function handlePageSizeChange(newSize) {
-  pageParams.pageSize = newSize;
-  pageParams.page = 1; // Reset to first page on size change
+  pageSize.value = newSize;
+  page.value = 1; // Reset to first page on size change
 }
 </script>
