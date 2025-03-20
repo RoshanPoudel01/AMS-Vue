@@ -31,8 +31,8 @@
             <Loader2 v-if="isPending" class="w-4 h-4 mr-2 animate-spin" />
             Submit
           </Button>
-          <RouterLink to="/register">
-            <p class="text-blue-500 hover:underline">Register</p>
+          <RouterLink to="/login">
+            <p class="text-blue-500 hover:underline">Login</p>
           </RouterLink>
         </div>
       </form>
@@ -53,58 +53,76 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useLogin } from "@/services/service-auth";
 import { ref } from "vue";
 
+import router from "@/router";
+import { AddUser } from "@/services/service-users";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Loader2, LucideEyeClosed } from "lucide-vue-next";
 import { useForm } from "vee-validate";
 import * as z from "zod";
 
-const formSchema = z.object({
-  username: z
-    .string({
-      required_error: "Username is required",
-      invalid_type_error: "Username must be a string",
-    })
-    .min(1, "Username is required")
-    .max(50, "Username must be at most 50 characters"),
-  password: z
-    .string({
-      required_error: "Password is required",
-    })
-    .min(8, "Password must be at least 8 characters")
-    .max(16, "Password must be at most 16 characters"),
-  confirmPassword: z
-    .string({
-      required_error: "Confirm Password is required",
-    })
-    .min(8, "Confirm Password must be at least 8 characters")
-    .max(16, "Confirm Password must be at most 16 characters")
-    .refine((data) => data, {
-      message: "Passwords do not match",
-    }),
-});
+const formSchema = z
+  .object({
+    email: z
+      .string({
+        required_error: "Email is required",
+        invalid_type_error: "Email must be a string",
+      })
+      .email("Email must be a valid email address"),
+    username: z
+      .string({
+        required_error: "Username is required",
+        invalid_type_error: "Username must be a string",
+      })
+      .min(1, "Username is required")
+      .max(50, "Username must be at most 50 characters"),
+    password: z
+      .string({
+        required_error: "Password is required",
+      })
+      .min(8, "Password must be at least 8 characters")
+      .max(16, "Password must be at most 16 characters"),
+    confirmPassword: z
+      .string({
+        required_error: "Confirm Password is required",
+      })
+      .min(8, "Confirm Password must be at least 8 characters")
+      .max(16, "Confirm Password must be at most 16 characters"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 const isFieldDirty = ref(false);
 
 const { handleSubmit, handleReset, errors } = useForm({
   validationSchema: toTypedSchema(formSchema),
 });
-console.log(errors);
-const { mutateAsync: login, isPending } = useLogin();
+const { mutateAsync: addUser, isPending } = AddUser();
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    // await login(values);
-    // handleReset();
-    console.log(values);
+    await addUser({
+      email: values.email,
+      username: values.username,
+      password: values.password,
+    });
   } catch (error) {
     console.error(error);
   }
+  handleReset();
+  router.push("/login");
 });
 
 const fields = [
+  {
+    name: "email",
+    label: "Email",
+    placeholder: "Email",
+    type: "email",
+  },
   {
     name: "username",
     label: "Username",

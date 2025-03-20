@@ -14,11 +14,16 @@ const getArtists = (params: { page: number; size: number }) => {
   });
 };
 
-const GetAllArtists = (params: { page: number; size: number }) => {
+const GetAllArtists = (params: {
+  page: number;
+  size: number;
+  enabled: boolean;
+}) => {
   return useQuery({
     queryKey: computed(() => [api.artists.index, params.page, params.size]),
     queryFn: () => getArtists(params),
     select: (data) => data.data,
+    enabled: params.enabled,
   });
 };
 

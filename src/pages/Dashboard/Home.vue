@@ -4,7 +4,7 @@ import AppLayout from "@/layouts/AppLayout.vue";
 </script>
 
 <template>
-  <AppLayout title="Dashboard">
+  <AppLayout title="Welcome to AMS!">
     <div>
       <Button variant="secondary">Click me</Button>
     </div>

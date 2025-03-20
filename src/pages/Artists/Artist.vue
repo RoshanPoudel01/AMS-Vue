@@ -5,10 +5,16 @@
         <ImportIcon class="w-5 h-5" />
         Import</Button
       >
-      <Button variant="secondary" @click="handleExport">
-        <ImportIcon class="w-5 h-5 rotate-180" />
-        Export</Button
+      <download-csv
+        @click="refetch"
+        :data="allArtistsData"
+        :name="`Artists-${new Date().toISOString()}.csv`"
       >
+        <Button variant="secondary">
+          Export Data
+          <ImportIcon class="w-5 h-5 rotate-180" />
+        </Button>
+      </download-csv>
       <Button @click="addArtist">Add Artist</Button>
     </div>
     <div>
@@ -31,11 +37,7 @@ import CustomDatatable from "@/components/Datatable/DataTable.vue";
 import { Button } from "@/components/ui/button";
 import AppLayout from "@/layouts/AppLayout.vue";
 import router from "@/router";
-import {
-  DeleteArtist,
-  ExportArtists,
-  GetAllArtists,
-} from "@/services/service-artist";
+import { DeleteArtist, GetAllArtists } from "@/services/service-artist";
 import { Edit, ImportIcon, Music, Trash } from "lucide-vue-next";
 import { h, reactive, ref, watch } from "vue";
 
@@ -45,6 +47,7 @@ const pageSize = ref(10);
 
 // Initialize refs for derived data
 const artistsData = ref([]);
+const allArtistsData = ref([]);
 const totalItems = ref(0);
 
 // Create reactive params object for the query
@@ -55,7 +58,7 @@ const queryParams = reactive({
 
 // Get data using the reactive params
 const { data, isLoading } = GetAllArtists(queryParams);
-const { refetch } = ExportArtists(false);
+
 const { mutateAsync } = DeleteArtist();
 // Watch for page/pageSize changes and update query params
 watch([page, pageSize], ([newPage, newSize]) => {
@@ -64,6 +67,7 @@ watch([page, pageSize], ([newPage, newSize]) => {
 });
 
 // Update local refs whenever data changes
+
 watch(
   data,
   (newData) => {
@@ -77,6 +81,22 @@ watch(
   { immediate: true }
 );
 
+const { data: allartistData, refetch } = GetAllArtists({
+  page: 1,
+  size: 500,
+  enabled: false,
+});
+
+watch(
+  allartistData,
+  (newData) => {
+    if (newData) {
+      // Extract the artists array from the response
+      allArtistsData.value = newData.artists || [];
+    }
+  },
+  { immediate: true }
+);
 // Define table columns
 const columns = [
   {
@@ -123,10 +143,6 @@ function handlePageChange(newPage) {
 function handlePageSizeChange(newSize) {
   pageSize.value = newSize;
   page.value = 1; // Reset to first page on size change
-}
-
-function handleExport() {
-  refetch();
 }
 
 const getSongs = (id) => {
