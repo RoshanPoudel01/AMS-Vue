@@ -1,22 +1,24 @@
 <template>
   <AppLayout title="Artists">
-    <div class="flex justify-end p-4">
-      <Dialog>
-        <DialogTrigger as-child>
-          <Button>Add Artist</Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>Add Artist</DialogHeader>
-        </DialogContent>
-      </Dialog>
+    <div class="flex justify-end space-x-5 px-4">
+      <Button variant="secondary">
+        <ImportIcon class="w-5 h-5" />
+        Import</Button
+      >
+      <Button variant="secondary" @click="handleExport">
+        <ImportIcon class="w-5 h-5 rotate-180" />
+        Export</Button
+      >
+      <Button @click="addArtist">Add Artist</Button>
     </div>
     <div>
       <CustomDatatable
         :data="artistsData"
         :columns="columns"
-        :totalItems="16"
+        :totalItems="totalItems"
         :page="page"
         :pageSize="pageSize"
+        :isLoading="isLoading"
         @update:page="handlePageChange"
         @update:pageSize="handlePageSizeChange"
       />
@@ -27,13 +29,15 @@
 <script setup>
 import CustomDatatable from "@/components/Datatable/DataTable.vue";
 import { Button } from "@/components/ui/button";
-import Dialog from "@/components/ui/dialog/Dialog.vue";
-import DialogContent from "@/components/ui/dialog/DialogContent.vue";
-import DialogHeader from "@/components/ui/dialog/DialogHeader.vue";
-import DialogTrigger from "@/components/ui/dialog/DialogTrigger.vue";
 import AppLayout from "@/layouts/AppLayout.vue";
-import { GetAllArtists } from "@/services/service-artist";
-import { reactive, ref, watch } from "vue";
+import router from "@/router";
+import {
+  DeleteArtist,
+  ExportArtists,
+  GetAllArtists,
+} from "@/services/service-artist";
+import { Edit, ImportIcon, Music, Trash } from "lucide-vue-next";
+import { h, reactive, ref, watch } from "vue";
 
 // Pagination parameters
 const page = ref(1);
@@ -50,8 +54,9 @@ const queryParams = reactive({
 });
 
 // Get data using the reactive params
-const { data } = GetAllArtists(queryParams);
-
+const { data, isLoading } = GetAllArtists(queryParams);
+const { refetch } = ExportArtists(false);
+const { mutateAsync } = DeleteArtist();
 // Watch for page/pageSize changes and update query params
 watch([page, pageSize], ([newPage, newSize]) => {
   queryParams.page = newPage;
@@ -66,8 +71,7 @@ watch(
       // Extract the artists array from the response
       artistsData.value = newData.artists || [];
       // Extract pagination metadata
-      totalItems.value = newData.meta?.total_entries || 0;
-      console.log("Total items:", totalItems.value);
+      totalItems.value = newData.meta?.total_entries;
     }
   },
   { immediate: true }
@@ -75,6 +79,13 @@ watch(
 
 // Define table columns
 const columns = [
+  {
+    accessorKey: "s.n",
+    header: "S.N",
+    cell: (row) => {
+      return (page.value - 1) * pageSize.value + row.row.index + 1;
+    },
+  },
   { accessorKey: "name", header: "Name" },
   { accessorKey: "dob", header: "DOB" },
   { accessorKey: "gender", header: "Gender" },
@@ -82,6 +93,25 @@ const columns = [
   { accessorKey: "first_release_year", header: "First Release Year" },
   { accessorKey: "no_of_albums_released", header: "Total Albums" },
   { accessorKey: "music_count", header: "Total Songs" },
+  {
+    accessorKey: "action",
+    header: "Action",
+    cell: ({ row }) =>
+      h("div", { class: "flex space-x-3" }, [
+        h(Music, {
+          class: "w-5 h-5 cursor-pointer text-blue-500 hover:text-blue-700",
+          onClick: () => getSongs(row?.original?.id),
+        }),
+        h(Edit, {
+          class: "w-5 h-5 cursor-pointer text-blue-500 hover:text-blue-700",
+          onClick: () => editRow(row?.original?.id),
+        }),
+        h(Trash, {
+          class: "w-5 h-5 cursor-pointer text-red-500 hover:text-red-700",
+          onClick: () => deleteRow(row?.original?.id),
+        }),
+      ]),
+  },
 ];
 
 // Handle page change
@@ -94,4 +124,26 @@ function handlePageSizeChange(newSize) {
   pageSize.value = newSize;
   page.value = 1; // Reset to first page on size change
 }
+
+function handleExport() {
+  refetch();
+}
+
+const getSongs = (id) => {
+  router.push(`/artists/${id}/songs`);
+};
+const addArtist = () => {
+  router.push("/artists/add");
+};
+const editRow = (row) => {
+  router.push(`/artists/${row}`);
+};
+
+const deleteRow = async (row) => {
+  try {
+    await mutateAsync(row);
+  } catch (error) {
+    console.error(error);
+  }
+};
 </script>

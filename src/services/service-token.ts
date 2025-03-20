@@ -1,3 +1,5 @@
+import { jwtDecode } from "jwt-decode";
+
 export interface TokenDetails {
   token: string;
   expiresIn: number;
@@ -15,8 +17,9 @@ function getToken() {
   try {
     const tokenDetails = localStorage.getItem("token");
     if (!tokenDetails) return null;
-    const tokenWithExpiry: TokenDetails = JSON.parse(tokenDetails);
-    if (Date.now() > tokenWithExpiry.expiresIn) {
+    const tokenWithExpiry = jwtDecode(JSON.parse(tokenDetails)).exp;
+
+    if (tokenWithExpiry && new Date().getTime() / 1000 > tokenWithExpiry) {
       localStorage.removeItem("token");
       return null;
     }
@@ -31,7 +34,8 @@ function getToken() {
 function isAuthenticated() {
   const tokenDetails = getToken();
   if (!tokenDetails) return false;
-  if (tokenDetails?.expiresIn > Date.now()) {
+  const decodedToken = tokenDetails ? jwtDecode(tokenDetails) : null;
+  if (decodedToken && decodedToken.exp && decodedToken.exp < Date.now()) {
     return true;
   } else {
     return false;

@@ -1,8 +1,10 @@
 <template>
-  <div class="flex justify-center items-center h-screen">
+  <div
+    class="flex justify-center items-center h-screen bg-gradient-to-r from-gray-300 via-gray-500 to-gray-700"
+  >
     <Card class="p-5 w-[440px]">
       <CardHeader class="text-center px-0">
-        <CardTitle class="text-xl">Login</CardTitle>
+        <CardTitle class="text-xl"> Login to your account </CardTitle>
       </CardHeader>
       <form @submit="onSubmit" class="space-y-3">
         <FormField
@@ -24,10 +26,15 @@
             <FormMessage />
           </FormItem>
         </FormField>
-        <Button type="submit">
-          <Loader2 v-if="isPending" class="w-4 h-4 mr-2 animate-spin" />
-          Submit
-        </Button>
+        <div class="flex items-center justify-between">
+          <Button :disabled="isPending" type="submit">
+            <Loader2 v-if="isPending" class="w-4 h-4 mr-2 animate-spin" />
+            Submit
+          </Button>
+          <RouterLink to="/register">
+            <p class="text-blue-500 hover:underline">Register</p>
+          </RouterLink>
+        </div>
       </form>
     </Card>
   </div>

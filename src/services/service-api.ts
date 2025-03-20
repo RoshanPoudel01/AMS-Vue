@@ -7,23 +7,25 @@ const auth = {
 const users = {
   index: "/users",
   byId: "/users/:id",
-  delete: "/users/delete/:id",
+  delete: "/users/:id",
   changePassword: "/users/change-password",
 };
 
 const artists = {
   index: "/artists",
-  byId: "/artist/:id",
-  create: "/artist/create-artist",
-  delete: "/artist/delete/:id",
-  update: "/artist/update/:id",
-  bulkUpload: "/artist/upload",
+  byId: "/artists/:id",
+  create: "/artists",
+  delete: "/artists/:id",
+  update: "/artists/:id",
+  bulkUpload: "/artists/upload",
+  export: "/artists/export",
 };
 const music = {
-  index: "music/allMusic?artist_id=:id",
+  index: "music/show_by_artist/:id",
   byId: "/music/:id",
-  create: "/music/create-music",
-  delete: "/music/delete/:id",
+  create: "/music",
+  delete: "/music/:id",
+  update: "/music/:id",
 };
 const dashboard = {
   index: "/dashboard",

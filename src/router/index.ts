@@ -1,13 +1,17 @@
-import AppLayout from "@/layouts/AppLayout.vue";
-import AuthLayout from "@/layouts/AuthLayout.vue";
+import MDetail from "@/pages/Music/MDetail.vue";
+import MForm from "@/pages/Music/MForm.vue";
 import TokenService from "@/services/service-token";
 import { watch } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
-import { loadLayoutMiddleware } from "./layoutMiddleware";
 const Artist = () => import("@/pages/Artists/Artist.vue");
 const Home = () => import("@/pages/Dashboard/Home.vue");
 const Music = () => import("@/pages/Music/Music.vue");
 const User = () => import("@/pages/User/User.vue");
+const UDetail = () => import("@/pages/User/UDetail.vue");
+const UForm = () => import("@/pages/User/UForm.vue");
+const Detail = () => import("@/pages/Artists/Detail.vue");
+const Form = () => import("@/pages/Artists/Form.vue");
+const Login = () => import("@/pages/Auth/Login.vue");
 
 watch(
   () => TokenService.getToken(),
@@ -26,43 +30,75 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: Home,
-      meta: {
-        layout: AppLayout,
-      },
     },
     {
       path: "/users",
       name: "users",
       component: User,
-      meta: {
-        layout: AppLayout,
-      },
+    },
+    {
+      path: "/users/:id",
+      name: "userdetail",
+      component: UDetail,
+    },
+    {
+      path: "/users/add",
+      name: "adduser",
+      component: UForm,
     },
     {
       path: "/artists",
       name: "artists",
       component: Artist,
-      meta: {
-        layout: AppLayout,
-      },
     },
     {
-      path: "/songs",
+      path: "/artists/add",
+      name: "addartist",
+      component: Form,
+    },
+    {
+      path: "/artists/:id",
+      name: "artistdetail",
+      component: Detail,
+    },
+    {
+      path: "/artists/:id/songs",
       name: "songs",
       component: Music,
-      meta: {
-        layout: AppLayout,
-      },
     },
+    {
+      path: "/artists/:id/songs/add",
+      name: "addsong",
+      component: MForm,
+    },
+    {
+      path: "/artists/:id/songs/:id",
+      name: "songdetail",
+      component: MDetail,
+    },
+
     {
       path: "/login",
       name: "login",
-      component: () => import("@/pages/Auth/Login.vue"),
+      component: Login,
       meta: {
-        layout: AuthLayout,
         public: true, // Allow access to even if not logged in
         onlyWhenLoggedOut: true,
       },
+    },
+    {
+      path: "/register",
+      name: "register",
+      component: () => import("@/pages/Auth/Register.vue"),
+      meta: {
+        public: true,
+        onlyWhenLoggedOut: true,
+      },
+    },
+    {
+      path: "/:catchAll(.*)*",
+      name: "pagenotfound",
+      component: () => import("@/pages/NotFound/PageNotFound.vue"),
     },
   ],
 });
@@ -71,8 +107,14 @@ router.beforeEach((to, from, next) => {
   const onlyWhenLoggedOut = to.matched.some(
     (record) => record.meta.onlyWhenLoggedOut
   );
-  const loggedIn = !!TokenService.getToken();
-
+  const loggedIn = TokenService.isAuthenticated();
+  if (!loggedIn && !!TokenService.getToken()) {
+    TokenService.clearToken();
+    return next({
+      path: "/login",
+      query: { redirect: to.fullPath }, // Store the full path to redirect the user to after login
+    });
+  }
   if (!isPublic && !loggedIn) {
     return next({
       path: "/login",
@@ -87,5 +129,5 @@ router.beforeEach((to, from, next) => {
 
   next();
 });
-router.beforeEach(loadLayoutMiddleware);
+// router.beforeEach(loadLayoutMiddleware);
 export default router;
